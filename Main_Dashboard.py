@@ -222,3 +222,138 @@ with col2:
         df_peak,
         use_container_width=True
     )
+
+# -- Row (3) ----------------------------------------------------------------------------------
+# --- Query 1: Total Fees Per Year (AXL + USD) ---------------------------------------------------------------------------
+@st.cache_data(ttl=3600)
+def get_total_fees_per_year():
+    query = """
+    SELECT  
+        date_trunc('year',block_timestamp_hour) as "Date", 
+        ROUND(sum(total_fees_native)) as "Total Fees ($AXL)",
+        ROUND(sum(total_fees_USD)) as "Total Fees ($USD)"
+    from AXELAR.STATS.EZ_CORE_METRICS_HOURLY
+    GROUP BY 1
+    ORDER BY 1
+    """
+    return pd.read_sql(query, conn)
+
+df_fees = get_total_fees_per_year()
+df_fees["Date"] = pd.to_datetime(df_fees["Date"]).dt.year
+
+fig_fees = go.Figure()
+fig_fees.add_trace(go.Bar(
+    x=df_fees["Date"], y=df_fees["Total Fees ($AXL)"],
+    name="Total Fees ($AXL)", marker_color="black", yaxis="y1"
+))
+fig_fees.add_trace(go.Scatter(
+    x=df_fees["Date"], y=df_fees["Total Fees ($USD)"],
+    name="Total Fees ($USD)", mode="lines+markers",
+    marker=dict(color="blue"), yaxis="y2"
+))
+fig_fees.update_layout(
+    title="Total Txn Fee Per Year",
+    xaxis=dict(title="Year"),
+    yaxis=dict(title="Total Fees ($AXL)", side="left"),
+    yaxis2=dict(title="Total Fees ($USD)", overlaying="y", side="right"),
+    bargap=0.2, template="plotly_white", height=450
+)
+
+# --- Query 2: Avg & Median Fees Per Year -------------------------------------------------------------------------------
+@st.cache_data(ttl=3600)
+def get_avg_median_fees():
+    query = """
+    select date_trunc('year',block_timestamp) as "Date", 
+        round(avg(fee/pow(10,6)),4) as "Avg",
+        round(median(fee/pow(10,6)),4) as "Median"
+    from axelar.core.fact_transactions
+    where fee_denom='uaxl' and tx_succeeded='true'
+    group by 1
+    order by 1
+    """
+    return pd.read_sql(query, conn)
+
+df_avg_med = get_avg_median_fees()
+df_avg_med["Date"] = pd.to_datetime(df_avg_med["Date"]).dt.year
+
+fig_avg_med = go.Figure()
+fig_avg_med.add_trace(go.Scatter(
+    x=df_avg_med["Date"], y=df_avg_med["Avg"], name="Avg",
+    mode="lines+markers", marker=dict(color="black"), yaxis="y1"
+))
+fig_avg_med.add_trace(go.Scatter(
+    x=df_avg_med["Date"], y=df_avg_med["Median"], name="Median",
+    mode="lines+markers", marker=dict(color="blue"), yaxis="y2"
+))
+fig_avg_med.update_layout(
+    title="Avg & Median Txn Fees Per Year",
+    xaxis=dict(title="Year"),
+    yaxis=dict(title="Avg Fee", side="left"),
+    yaxis2=dict(title="Median Fee", overlaying="y", side="right"),
+    template="plotly_white", height=450
+)
+
+# --- Query 3: Axelar Users Per Year (Stacked Bar + Line) ---------------------------------------------------------------
+@st.cache_data(ttl=3600)
+def get_users_per_year():
+    query = """
+    with table1 as (
+        SELECT date_trunc('year',block_timestamp) as "Date", 
+               count(distinct tx_from) as "Total Users"
+        FROM axelar.core.fact_transactions
+        GROUP BY 1
+    ),
+    table2 as (
+        with tab1 as (
+            SELECT tx_from, min(block_timestamp::date) as first_date
+            FROM axelar.core.fact_transactions
+            GROUP BY 1
+        )
+        select date_trunc('year',first_date) as "Date", count(distinct tx_from) as "New Users"
+        from tab1
+        group by 1
+    )
+    select table1."Date" as "Date", "Total Users", "New Users", 
+           "Total Users"-"New Users" as "Active Users"
+    from table1 
+    left join table2 on table1."Date"=table2."Date"
+    order by 1
+    """
+    return pd.read_sql(query, conn)
+
+df_users = get_users_per_year()
+df_users["Date"] = pd.to_datetime(df_users["Date"]).dt.year
+
+fig_users = go.Figure()
+# New Users
+fig_users.add_trace(go.Bar(
+    x=df_users["Date"], y=df_users["New Users"], name="New Users",
+    marker_color="blue"
+))
+# Active Users
+fig_users.add_trace(go.Bar(
+    x=df_users["Date"], y=df_users["Active Users"], name="Active Users",
+    marker_color="indigo"
+))
+# Total Users (line)
+fig_users.add_trace(go.Scatter(
+    x=df_users["Date"], y=df_users["Total Users"], name="Total Users",
+    mode="lines+markers", marker=dict(color="black")
+))
+fig_users.update_layout(
+    title="Axelar Users per Year",
+    xaxis=dict(title="Year"),
+    yaxis=dict(title="Users"),
+    barmode="stack",
+    template="plotly_white", height=450
+)
+
+# --- Display all three charts in one row --------------------------------------------------------------------------------
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.plotly_chart(fig_fees, use_container_width=True)
+with col2:
+    st.plotly_chart(fig_avg_med, use_container_width=True)
+with col3:
+    st.plotly_chart(fig_users, use_container_width=True)
+
