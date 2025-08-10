@@ -163,7 +163,7 @@ def get_peak_days():
     from axelar.core.fact_transactions
     group by 1
     order by 2 desc 
-    limit 5
+    limit 10
     """
     return pd.read_sql(query, conn)
 
