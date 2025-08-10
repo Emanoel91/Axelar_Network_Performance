@@ -253,9 +253,9 @@ fig_fees.add_trace(go.Scatter(
 ))
 fig_fees.update_layout(
     title="Total Txn Fee Per Year",
-    xaxis=dict(title="Year"),
-    yaxis=dict(title="Total Fees ($AXL)", side="left"),
-    yaxis2=dict(title="Total Fees ($USD)", overlaying="y", side="right"),
+    xaxis=dict(title=" "),
+    yaxis=dict(title="$AXL", side="left"),
+    yaxis2=dict(title="$USD", overlaying="y", side="right"),
     bargap=0.2, template="plotly_white", height=450
 )
 
@@ -287,9 +287,9 @@ fig_avg_med.add_trace(go.Scatter(
 ))
 fig_avg_med.update_layout(
     title="Avg & Median Txn Fees Per Year",
-    xaxis=dict(title="Year"),
-    yaxis=dict(title="Avg Fee", side="left"),
-    yaxis2=dict(title="Median Fee", overlaying="y", side="right"),
+    xaxis=dict(title=" "),
+    yaxis=dict(title="$AXL", side="left"),
+    yaxis2=dict(title="$AXL", overlaying="y", side="right"),
     template="plotly_white", height=450
 )
 
@@ -342,8 +342,8 @@ fig_users.add_trace(go.Scatter(
 ))
 fig_users.update_layout(
     title="Axelar Users per Year",
-    xaxis=dict(title="Year"),
-    yaxis=dict(title="Users"),
+    xaxis=dict(title=" "),
+    yaxis=dict(title="Wallet count"),
     barmode="stack",
     template="plotly_white", height=450
 )
