@@ -135,3 +135,90 @@ kpi_card(col1, "Transaction Growth", txn_change)
 kpi_card(col2, "User Growth", user_change)
 kpi_card(col3, "Avg Fee Change", avg_fee_change)
 kpi_card(col4, "Median Fee Change", median_fee_change)
+
+# --- Row(2). Transactions & Users Per Year -----------------------------------------------------------------------------
+@st.cache_data(ttl=3600)
+def get_txn_user_per_year():
+    query = """
+    select date_trunc('year',block_timestamp) as "Date", 
+    count(distinct tx_id) as "Number of Transactions",
+    count(distinct tx_from) as "Number of Users"
+    from axelar.core.fact_transactions
+    group by 1
+    order by 1
+    """
+    return pd.read_sql(query, conn)
+
+df_yearly = get_txn_user_per_year()
+df_yearly["Date"] = pd.to_datetime(df_yearly["Date"]).dt.year  # نمایش فقط سال
+
+# --- Row(2). Peak Transaction Days --------------------------------------------------------------------------------------
+@st.cache_data(ttl=3600)
+def get_peak_days():
+    query = """
+    select block_timestamp::date as "Date", 
+    count(distinct tx_id) as "Number of Transactions", 
+    count(distinct tx_from) as "Number of Users",
+    round(sum(fee)/pow(10,6),1) as "Total Txn Fee"
+    from axelar.core.fact_transactions
+    group by 1
+    order by 2 desc 
+    limit 5
+    """
+    return pd.read_sql(query, conn)
+
+df_peak = get_peak_days()
+df_peak.index = df_peak.index + 1  # اندیس از 1 شروع شود
+df_peak["Number of Transactions"] = df_peak["Number of Transactions"].map("{:,}".format)
+df_peak["Number of Users"] = df_peak["Number of Users"].map("{:,}".format)
+df_peak["Total Txn Fee"] = df_peak["Total Txn Fee"].map("{:,.1f}".format)
+
+# --- Row(2). Layout: Chart + Table -----------------------------------------------------------------------------------------------
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    fig = go.Figure()
+
+    # Bar for Transactions
+    fig.add_trace(go.Bar(
+        x=df_yearly["Date"],
+        y=df_yearly["Number of Transactions"],
+        name="Number of Transactions",
+        marker_color="black",
+        yaxis="y1"
+    ))
+
+    # Line for Users
+    fig.add_trace(go.Scatter(
+        x=df_yearly["Date"],
+        y=df_yearly["Number of Users"],
+        name="Number of Users",
+        mode="lines+markers",
+        marker=dict(color="blue"),
+        yaxis="y2"
+    ))
+
+    # Layout settings
+    fig.update_layout(
+        title="Transactions & Users Per Year",
+        xaxis=dict(title="Year"),
+        yaxis=dict(title="Number of Transactions", side="left"),
+        yaxis2=dict(
+            title="Number of Users",
+            overlaying="y",
+            side="right"
+        ),
+        legend=dict(x=0.02, y=0.98, bgcolor="rgba(0,0,0,0)"),
+        bargap=0.2,
+        template="plotly_white",
+        height=500
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+    st.markdown("### Days with peak txn counts")
+    st.dataframe(
+        df_peak,
+        use_container_width=True
+    )
