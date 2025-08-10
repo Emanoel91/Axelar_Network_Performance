@@ -150,7 +150,7 @@ def get_txn_user_per_year():
     return pd.read_sql(query, conn)
 
 df_yearly = get_txn_user_per_year()
-df_yearly["Date"] = pd.to_datetime(df_yearly["Date"]).dt.year  # نمایش فقط سال
+df_yearly["Date"] = pd.to_datetime(df_yearly["Date"]).dt.year  
 
 # --- Row(2). Peak Transaction Days --------------------------------------------------------------------------------------
 @st.cache_data(ttl=3600)
@@ -168,7 +168,7 @@ def get_peak_days():
     return pd.read_sql(query, conn)
 
 df_peak = get_peak_days()
-df_peak.index = df_peak.index + 1  # اندیس از 1 شروع شود
+df_peak.index = df_peak.index + 1  
 df_peak["Number of Transactions"] = df_peak["Number of Transactions"].map("{:,}".format)
 df_peak["Number of Users"] = df_peak["Number of Users"].map("{:,}".format)
 df_peak["Total Txn Fee"] = df_peak["Total Txn Fee"].map("{:,.1f}".format)
@@ -202,9 +202,9 @@ with col1:
     fig.update_layout(
         title="Transactions & Users Per Year",
         xaxis=dict(title="Year"),
-        yaxis=dict(title="Number of Transactions", side="left"),
+        yaxis=dict(title="Txns count", side="left"),
         yaxis2=dict(
-            title="Number of Users",
+            title="Address count",
             overlaying="y",
             side="right"
         ),
