@@ -121,7 +121,7 @@ def kpi_card(col, title, value):
         f"""
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; text-align: center;">
             <div style="font-size: 16px; font-weight: bold;">
-                {title} <span title="Comparison between 2023 and 2024">ℹ️</span>
+                {title} <span title="Comparison between 2023 and 2024"> </span>
             </div>
             <div style="font-size: 24px; color: {color}; font-weight: bold;">
                 {value}%
