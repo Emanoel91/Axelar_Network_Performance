@@ -38,10 +38,10 @@ st.markdown(
 # --- Info Box --------------------------------------------------------------------------------------------------------------
 st.markdown(
     """
-    <div style="background-color: #d9fd51; padding: 10px; border-radius: 1px; border: 1px solid #000000;">
+    <div style="background-color: #e5f3fc; padding: 10px; border-radius: 1px; border: 1px solid #e5f3fc;">
         Welcome to the Axelar Performance Dashboard!
         Axelar is a decentralized interoperability network enabling seamless communication between blockchains. This dashboard provides a 
-        comprehensive analysis of Axelar's performance metrics, including transaction volumes, network activity, and key usage trends. Powered by 
+        comprehensive analysis of Axelar's performance metrics, including transaction count, network activity, and key usage trends. Powered by 
         data insights from Flipside Crypto, it offers a detailed overview of how Axelar is driving interoperability in the blockchain ecosystem.
     </div>
     """,
